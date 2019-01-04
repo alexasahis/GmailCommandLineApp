@@ -9,7 +9,17 @@ namespace SMail
 {
     class Program
     {
-        static string Help = "Arguments must follows: [email address] [password] [attachment(optional)] ";
+        static string Help = @"
+Use following arguments:
+        -a          From email address and account name
+        -p          Account password
+        -s          Subject of email
+        -b          Body of email
+        -f          Attachment file (multiple files add another -f)
+        -t          To address (multiple addresses add another -t)
+        -cc         CC address (multiple addresses add another -cc)
+        -bcc        BCC address (multiple addresses add another -bcc)
+";
         static void Main(string[] args)
         {
             try
@@ -19,6 +29,8 @@ namespace SMail
                 var subject = "";
                 var body = "";
                 var toAddrs = new List<string>();
+                var ccAddrs = new List<string>();
+                var bccAddrs = new List<string>();
                 var attachments = new List<string>();
 
                 for (var i = 0; i < args.Length; i++)
@@ -29,9 +41,6 @@ namespace SMail
                         {
                             case "-a":
                                 emailAddr = CheckArgs(args[i], args[i + 1]);
-                                break;
-                            case "-t":
-                                toAddrs.Add(CheckArgs(args[i], args[i + 1]));
                                 break;
                             case "-p":
                                 password = CheckArgs(args[i], args[i + 1]);
@@ -45,15 +54,32 @@ namespace SMail
                             case "-f":
                                 attachments.Add(CheckArgs(args[i], args[i + 1]));
                                 break;
+                            case "-t":
+                                toAddrs.Add(CheckArgs(args[i], args[i + 1]));
+                                break;
+                            case "-cc":
+                                ccAddrs.Add(CheckArgs(args[i], args[i + 1]));
+                                break;
+                            case "-bcc":
+                                bccAddrs.Add(CheckArgs(args[i], args[i + 1]));
+                                break;
                             default:
+                                Console.WriteLine(Help);
+                                Environment.Exit(0);
                                 break;
                         }
 
                     }
                 }
-                SendEmail(emailAddr, password, toAddrs, subject, body, attachments);
-                Console.WriteLine("Email is sent.");
-
+                if (emailAddr != "" && password != "")
+                {
+                    SendEmail(emailAddr, password, toAddrs, subject, body, attachments);
+                    Console.WriteLine("Email is sent.");
+                    Environment.Exit(0);
+                }
+                Console.WriteLine("Arguments are not correct.");
+                Console.WriteLine(Help);
+                Environment.Exit(1);
             }
             catch (ArgumentException ae)
             {
@@ -111,6 +137,14 @@ namespace SMail
                     if (IsEmail(value))
                         return value;
                     throw new ArgumentException("To email address is not correct.");
+                case "-cc":
+                    if (IsEmail(value))
+                        return value;
+                    throw new ArgumentException("CC email address is not correct.");
+                case "-bcc":
+                    if (IsEmail(value))
+                        return value;
+                    throw new ArgumentException("BCC email address is not correct.");
                 case "-p":
                     if (!value.StartsWith("-"))
                         return value;
